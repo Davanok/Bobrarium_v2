@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1024297399366",
+    "firebase_url": "https://bobrarium-v2-default-rtdb.firebaseio.com",
+    "project_id": "bobrarium-v2",
+    "storage_bucket": "bobrarium-v2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1024297399366:android:da12973651b1771a79c647",
+        "android_client_info": {
+          "package_name": "com.example.bobrarium_v2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1024297399366-g6i4obqpfk716sr8c73676s9its76nf5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.bobrarium_v2",
+            "certificate_hash": "2556373fe7b5668442ca1f01c179c5acaf084a1a"
+          }
+        },
+        {
+          "client_id": "1024297399366-bh96rc3sk2sd6hd2avodit5f7qqd5cv0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu4jK0GqkeIIyhtMX_gSsMwofoI4cBQKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1024297399366-8pdqoepb36ev0uq7vdt4hpior1eum3ee.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

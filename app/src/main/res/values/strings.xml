@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">Bobrarium_v2</string>
+
+    <string name="bobeur">Bobeur</string>
+    <string name="chats_title">Chats</string>
+    <string name="account_title">Account</string>
+    <string name="settings_title">Settings</string>
+    <string name="menu">Menu</string>
+
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+
+    <string name="showPassword">Show password</string>
+    <string name="hidePassword">Hide password</string>
+
+    <string name="signUp">Sign up</string>
+    <string name="signIn">Sign in</string>
+    <string name="signOut">Sign out</string>
+    <string name="alreadyHaveAccount">Already have account? Sign in</string>
+    <string name="forgotPassword">Forgot password?</string>
+    <string name="emailIsBlank">Email is blank</string>
+    <string name="sentResetPassword">An reset password email sent to address %1$s </string>
+
+    <string name="emailSent">An verification email sent to address %1$s</string>
+    <string name="emailCanceled">Email canceled</string>
+    <string name="emailFail">Email fail</string>
+
+    <string name="userIcon">User icon</string>
+    <string name="username">Username</string>
+
+    <string name="about">About</string>
+
+    <string name="emailIsVerified">Email is verified</string>
+    <string name="emailIsNotVerified">Email is not verified</string>
+    <string name="verifyEmailFor">Verify email for full features</string>
+    <string name="verify">Verify</string>
+    <string name="verifyEmail">Verify email</string>
+    <string name="editEmail">Edit email</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="notNow">Not now</string>
+    <string name="edit">Edit</string>
+    <string name="addImage">Add image</string>
+
+    <string name="errorImageLoading">Error image loading</string>
+    <string name="makeFavourite">Make favourite</string>
+    <string name="makeUnFavourite">Make un favourite</string>
+    <string name="deleteImage">Delete image</string>
+
+    <string name="editPassword">Edit password</string>
+    <string name="oldPassword">Old password</string>
+    <string name="newPassword">New password</string>
+    <string name="repeatPassword">Repeat password</string>
+    <string name="passwordMismatch">Password mismatch</string>
+    <string name="updatePassword">Update password</string>
+    <string name="successUpdatePassword">Password successfully changed!</string>
+    <string name="failUpdatePassword">Change password failed</string>
+    <string name="passwordTooShort">password length must be at least 6 characters</string>
+
+    <string name="newChat">Add new chat</string>
+    <string name="chatName">Chat name</string>
+    <string name="chatIcon">Chat icon</string>
+    <string name="pickImage">Pick image</string>
+    <string name="create">Create</string>
+    
+    <string name="go">Go</string>
+    <string name="back">Back</string>
+
+    <string name="success">Success</string>
+    <string name="failure">Failure</string>
+    <string name="successCreateChat">Chat created successfully</string>
+
+    <string name="errorChatsLoading">Error chats loading</string>
+    <string name="nameTaken">Name taken</string>
+
+    <string name="undefined">Undefined</string>
+    <string name="not_signed_title">Sign in or register</string>
+    <string name="not_signed">To write and receive messages you need to login or register</string>
+
+    <string name="fail">Fail</string>
+    <string name="failWithMessages">Error loading messages</string>
+
+    <string name="newMessage">New message</string>
+    <string name="sendMessage">Send message</string>
+
+    <string name="scrollDown">Scroll to the end</string>
+    <string name="editChat">Edit chat</string>
+    <string name="admin">Admin</string>
+    <string name="filenameIsBlanc">Filename is blanc</string>
+    
+    <string name="commonChats">Common chats</string>
+    <string name="isNoCommonChats">You don`t have common chats</string>
+</resources>
