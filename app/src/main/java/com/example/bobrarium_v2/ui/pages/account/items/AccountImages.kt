@@ -3,12 +3,18 @@ package com.example.bobrarium_v2.ui.pages.account.items
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,6 +23,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,19 +73,46 @@ fun AccountImage(
                 contentScale = ContentScale.FillWidth
             )
         else
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                if(viewModel.images.isNotEmpty())
+                if(viewModel.images.isNotEmpty()) {
+                    val state = rememberPagerState { viewModel.images.size }
                     HorizontalPager(
                         modifier = Modifier.fillMaxWidth(),
-                        state = rememberPagerState{viewModel.images.size}
+                        state = state
                     ) { position ->
                         val uri = viewModel.images[position]
                         val isFavourite = uri.getNameWithExtension(context) == favouriteImage.value
-                        LoadedImage(uri, isFavourite, uid, viewModel, { viewModel.images.remove(it) }, {favouriteImage.value = it})
+                        LoadedImage(
+                            uri,
+                            isFavourite,
+                            uid,
+                            viewModel,
+                            { viewModel.images.remove(it) },
+                            { favouriteImage.value = it })
                     }
+                    Row(
+                        Modifier
+                            .align(Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(state.pageCount){
+                            val color =
+                                if (state.currentPage == it) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.background
+                            Box(
+                                modifier = Modifier
+                                    .padding(2.dp)
+                                    .clip(CircleShape)
+                                    .align(Alignment.Bottom)
+                                    .background(color)
+                                    .size(10.dp)
+                            )
+                        }
+                    }
+                }
                 else
                     Image(
                         modifier = Modifier
@@ -116,7 +150,7 @@ fun LoadedImage(
         val context = LocalContext.current
         AsyncImage(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(start = 10.dp, end = 10.dp, top = 10.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .fillMaxWidth()
                 .aspectRatio(1f),

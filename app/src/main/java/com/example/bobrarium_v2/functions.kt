@@ -6,14 +6,19 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 
 fun Uri.getExtension(context: Context): String?{
     val type = context.contentResolver.getType(this)
@@ -86,3 +91,56 @@ fun LazyListState.isScrollingDown(): Boolean {
         }
     }.value
 }
+@Composable
+fun LazyListState.OnScrolledDown(onScrolled: () -> Unit) {
+    var previousItem by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    val firstVisibleItem by remember(this) { derivedStateOf { firstVisibleItemScrollOffset } }
+    if(previousItem < firstVisibleItem){
+        onScrolled()
+    }
+    previousItem = firstVisibleItem
+}
+@Composable
+fun LazyListState.OnScrolledUp(onScrolled: () -> Unit) {
+    var previousItem by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    val firstVisibleItem by remember(this) { derivedStateOf { firstVisibleItemIndex } }
+
+    if(previousItem > firstVisibleItem){
+        onScrolled()
+    }
+    previousItem = firstVisibleItem
+}
+@Composable
+fun Modifier.onSwipedUp(offset: MutableFloatState = rememberSwipeState(), onSwiped: () -> Unit) = pointerInput(Unit){
+    detectDragGestures { change, dragAmount ->
+        change.consume()
+        if (dragAmount.y < 0) onSwiped()
+        offset.floatValue += dragAmount.y
+    }
+}
+@Composable
+fun Modifier.onSwipedDown(offset: MutableFloatState = rememberSwipeState(), onSwiped: () -> Unit) = pointerInput(Unit){
+    detectDragGestures { change, dragAmount ->
+        change.consume()
+        if (dragAmount.y > 0) onSwiped()
+        offset.floatValue += dragAmount.y
+    }
+}
+@Composable
+fun Modifier.onSwipedLeft(offset: MutableFloatState = rememberSwipeState(), onSwiped: () -> Unit) = pointerInput(Unit){
+    detectDragGestures { change, dragAmount ->
+        change.consume()
+        if (dragAmount.x < 0) onSwiped()
+        offset.floatValue += dragAmount.x
+    }
+}
+@Composable
+fun Modifier.onSwipedRight(offset: MutableFloatState = rememberSwipeState(), onSwiped: () -> Unit) = pointerInput(Unit){
+    detectDragGestures { change, dragAmount ->
+        change.consume()
+        if (dragAmount.x > 0) onSwiped()
+        offset.floatValue += dragAmount.x
+    }
+}
+@Composable
+fun rememberSwipeState() = remember { mutableFloatStateOf(0f) }
