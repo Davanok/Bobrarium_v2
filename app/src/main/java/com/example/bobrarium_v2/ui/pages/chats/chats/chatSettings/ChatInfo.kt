@@ -94,7 +94,6 @@ private fun ContentMain(navController: NavHostController, viewModel: ChatInfoVie
 }
 @Composable
 private fun Content(navController: NavHostController, chat: Chat, appViewModel: AppViewModel, viewModel: ChatInfoViewModel){
-    appViewModel.chatId.value = chat.id
     appViewModel.chat.value = chat
     LazyColumn(
         Modifier.fillMaxWidth(),
@@ -123,11 +122,15 @@ private fun Content(navController: NavHostController, chat: Chat, appViewModel: 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MembersItem(user: User, isAdmin: Boolean, onClick: () -> Unit){
-    Card(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        onClick = onClick
+    ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
+                .padding(3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             ItemImage(user.fiUri)

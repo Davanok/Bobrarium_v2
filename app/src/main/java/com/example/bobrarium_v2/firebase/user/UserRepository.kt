@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     fun loadUser(uid: String): Flow<Resource<User>>
-    fun addChat(uid: String?, chatID: String): Flow<Resource<String?>>
+    fun addChat(uid: String?, chatID: String): Flow<Resource<String>>
     fun getChats(uid: String): Flow<Resource<List<Chat>>>
     fun getImages(uid: String): Flow<Resource<List<Uri>>>
 

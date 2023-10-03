@@ -50,7 +50,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesUserRepositoryImpl(database: FirebaseDatabase, storage: FirebaseStorage): UserRepository {
-        return UserRepositoryImpl(database, storage)
+    fun providesUserRepositoryImpl(database: FirebaseDatabase, storage: FirebaseStorage, auth: FirebaseAuth): UserRepository {
+        return UserRepositoryImpl(database, storage, auth)
     }
 }

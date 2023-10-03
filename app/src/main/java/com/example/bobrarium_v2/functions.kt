@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.streams.toList
 
 fun Uri.getExtension(context: Context): String?{
     val type = context.contentResolver.getType(this)
@@ -144,3 +145,25 @@ fun Modifier.onSwipedRight(offset: MutableFloatState = rememberSwipeState(), onS
 }
 @Composable
 fun rememberSwipeState() = remember { mutableFloatStateOf(0f) }
+
+
+fun String.asInt() = chars().toList().map { it - 48 }.joinToString("")
+fun stringSum(a: String, b: String): String {
+    val ref = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    var aa = a.asInt()
+    var bb = b.asInt()
+    if(aa.length < bb.length) aa += String(CharArray(bb.length - aa.length) {'0'})
+    else if(bb.length < aa.length) bb += String(CharArray(aa.length - bb.length) {'0'})
+    return aa
+        .mapIndexed { index, value ->
+            value.digitToInt() + bb.getOrElse(index){ '0' }.digitToInt()
+        }
+        .joinToString("")
+        .map { it.digitToInt() }
+        .chunked(2)
+        .map {
+            val code = it[0]*10 + it.getOrElse(1) { 0 }
+            ref[code%62]
+        }
+        .joinToString("")
+}

@@ -58,7 +58,9 @@ kapt {
 }
 
 dependencies {
-    implementation("androidx.compose.foundation:foundation:1.6.0-alpha06")
+//    implementation("androidx.compose.foundation:foundation:1.6.0-alpha06") // for anchored draggable
+//    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1") // for constraint layout
+//    implementation("com.google.accompanist:accompanist-insets:0.22.0-rc") // for ime padding
 
     implementation("androidx.room:room-ktx:2.5.2")
     ksp("androidx.room:room-compiler:2.5.2")
@@ -66,13 +68,13 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.5")
 
-    kapt("com.google.dagger:hilt-compiler:2.47")
-    implementation("com.google.dagger:hilt-android:2.47")
-
+    kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("com.google.dagger:hilt-android:2.48")
     kapt("androidx.hilt:hilt-compiler:1.0.0")
+
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
-    implementation("androidx.navigation:navigation-compose:2.7.2")
+    implementation("androidx.navigation:navigation-compose:2.7.3")
 
     implementation(platform("com.google.firebase:firebase-bom:32.2.2"))
     implementation("com.google.firebase:firebase-inappmessaging-display-ktx:20.3.5")

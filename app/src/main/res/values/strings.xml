@@ -83,6 +83,7 @@
 
     <string name="newMessage">New message</string>
     <string name="sendMessage">Send message</string>
+    <string name="attachFile">Attach image</string>
 
     <string name="scrollDown">Scroll to the end</string>
     <string name="editChat">Edit chat</string>
@@ -91,4 +92,8 @@
     
     <string name="commonChats">Common chats</string>
     <string name="isNoCommonChats">You don`t have common chats</string>
+    
+    <string name="goToPrivateChat">Go to private chat</string>
+
+    <string name="image">Image</string>
 </resources>

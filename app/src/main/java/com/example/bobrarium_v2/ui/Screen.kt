@@ -28,6 +28,10 @@ sealed class Screen(val route: String, val arguments: List<NamedNavArgument> = e
         "chatInfo/$argument",
         listOf(navArgument("chatId") { type = NavType.StringType })
     )
+    class PrivateChat(argument: String = "{userId}"): Screen(
+        "privateChat/$argument",
+        listOf(navArgument("userId") { type = NavType.StringType })
+    )
 
     class OtherAccount(argument: String = "{userId}"): Screen(
         "otherAccount/$argument",

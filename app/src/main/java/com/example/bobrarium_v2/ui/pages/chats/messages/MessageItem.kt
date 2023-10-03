@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,9 +26,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.example.bobrarium_v2.R
 import com.example.bobrarium_v2.firebase.chat.Message
 import com.example.bobrarium_v2.firebase.user.User
+
+private const val TAG = "MessageItem"
 
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.userMessages(
@@ -36,7 +40,8 @@ fun LazyListScope.userMessages(
     author: User?,
     messages: List<Message>,
     viewModel: MessagesViewModel,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onMessageImageClick: (Message) -> Unit
 ){
     val isCurrentUser = uid == messages.firstOrNull()?.authorId
     stickyHeader(key = key) {
@@ -52,7 +57,7 @@ fun LazyListScope.userMessages(
         }
     }
     itemsIndexed(messages, key = { _, v -> v.id }){ index, message ->
-        MessageItem(isCurrentUser, message, author, index == 0)
+        MessageItem(isCurrentUser, message, author, index == 0, onMessageImageClick)
     }
 }
 
@@ -61,8 +66,10 @@ fun MessageItem(
     isCurrentUser: Boolean,
     message: Message,
     author: User?,
-    isFirst: Boolean
+    isFirst: Boolean,
+    onImageClick: (Message) -> Unit
 ) {
+    val modifier = Modifier.padding(5.dp)
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 45.dp)
@@ -74,7 +81,7 @@ fun MessageItem(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Content(true, message, author)
+                MessageContent(message, modifier, onImageClick)
             }
         else {
             if(isFirst)
@@ -85,15 +92,28 @@ fun MessageItem(
             Card(
                 modifier = Modifier.align(Alignment.Start),
             ) {
-                Content(false, message, author)
+                MessageContent(message, modifier, onImageClick)
             }
         }
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-private fun Content(isCurrentUser: Boolean, message: Message, author: User?){
-    Text(text = message.text, modifier = Modifier.padding(5.dp))
+private fun ColumnScope.MessageContent(message: Message, modifier: Modifier, onClick: (Message) -> Unit){
+    if(message.image != null)
+        GlideImage(
+            modifier = modifier
+                .clickable { onClick(message) }
+                .clip(RoundedCornerShape(4.dp)),
+            model = message.imageUri,
+            contentDescription = stringResource(id = R.string.image),
+            contentScale = ContentScale.FillWidth,
+            loading = placeholder(R.mipmap.beaver),
+            failure = placeholder(R.mipmap.beaver)
+        )
+    if (message.text.isNotBlank())
+        Text(text = message.text, modifier = modifier)
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)

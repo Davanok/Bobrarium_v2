@@ -4,6 +4,7 @@ import android.net.Uri
 import com.example.bobrarium_v2.R
 import com.example.bobrarium_v2.Resource
 import com.example.bobrarium_v2.Simple
+import com.example.bobrarium_v2.VisualContent
 import com.example.bobrarium_v2.firebase.user.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -13,6 +14,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+
+private const val TAG = "FirebaseChatRepositoryImpl"
 
 class FirebaseChatRepositoryImpl @Inject constructor(
     private val database: FirebaseDatabase,
@@ -46,17 +49,25 @@ class FirebaseChatRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun createPrivateChat(user1: String, user2: String, chatId: String) {
+        val chat = PrivateChat(chatId, user1, user2)
+        val reference = database.getReference("chats/$chatId")
+        reference.setValue(chat.map)
+        database.getReference("users/$user1/chats/$chatId").setValue(1)
+        database.getReference("users/$user2/chats/$chatId").setValue(1)
+    }
+
     override fun getChatsList(): Flow<Resource<List<Chat>>> {
         val ref =  database.getReference("chats")
         return flow {
             emit(Resource.Loading())
             val snapshot = ref.get().await()
-            val chats = snapshot.children.map { Chat(it) }
+            val chats = snapshot.children.mapNotNull { Chat.get(it, "") { _ -> User(it) } } // TODO: filter for not private
             emit(Resource.Success(chats))
             chats.forEach{
-                it.setUri(storage.reference)
-                emit(Resource.Success(chats))
+                it.setUri(storage)
             }
+            emit(Resource.Success(chats))
         }.catch {
             emit(Resource.Error(it.message))
         }
@@ -67,20 +78,26 @@ class FirebaseChatRepositoryImpl @Inject constructor(
         return flow {
             emit(Resource.Loading())
             val snapshot = ref.get().await()
-            val chat = Chat(snapshot)
+
+            val chat = Chat.get(snapshot, auth.uid!!){
+                getUser(it)
+            }!!
             emit(Resource.Success(chat))
-            chat.setUri(storage.reference)
+            chat.setUri(storage)
             emit(Resource.Success(chat))
         }.catch {
             emit(Resource.Error(it.message))
         }
     }
 
-    override fun sendImage(uid: String, chatId: String, text: String): Flow<Resource<Message>> {
+    override fun sendImage(uid: String, chatId: String, text: String, image: VisualContent?): Flow<Resource<Message>> {
         return flow {
             val reference = database.getReference("messages/$chatId").push()
-            val message = Message(reference.key!!, chatId, uid, text, Simple.Loading)
+            val message = Message(reference.key!!, chatId, uid, text, image?.filename, null, Simple.Loading)
             emit(Resource.Loading(message))
+            if(image!= null) {
+                storage.getReference("chats/$chatId/messages/${reference.key!!}_${image.filename}").putFile(image.uri).await()
+            }
             reference.setValue(message.map)
             emit(Resource.Success(message))
         }.catch {
@@ -99,6 +116,11 @@ class FirebaseChatRepositoryImpl @Inject constructor(
                 onSuccess(user)
             }
         }
+    }
+    private suspend fun getUser(uid: String): User {
+        val user = User(database.getReference("users/$uid").get().await())
+        user.setUri(storage)
+        return user
     }
 
     override fun updateImage(chatId: String, uri: Uri?, name: String?): Flow<Simple> {
@@ -135,6 +157,10 @@ class FirebaseChatRepositoryImpl @Inject constructor(
         }.catch {
             emit(Simple.Fail(it))
         }
+    }
+
+    override suspend fun getMessagesCount(chatId: String): Long {
+        return database.getReference("messages/$chatId").get().await().childrenCount
     }
 
 

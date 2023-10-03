@@ -20,6 +20,9 @@ class CreateChatViewModel @Inject constructor(
     private val repository: FirebaseChatRepository,
     private val userRepository: UserRepository
 ): ViewModel() {
+    companion object{
+        private const val TAG = "CreateChatViewModel"
+    }
     private val _createState = Channel<CustomState<Chat>>()
     val createState = _createState.receiveAsFlow()
 
@@ -36,7 +39,7 @@ class CreateChatViewModel @Inject constructor(
         userRepository.addChat(uid, chatId).collect{ result ->
             when(result){
                 is Resource.Success -> {}
-                is Resource.Error -> Log.w("CreateChatViewModel", result.message.toString())
+                is Resource.Error -> Log.w(TAG, result.message.toString())
                 is Resource.Loading -> {}
             }
         }

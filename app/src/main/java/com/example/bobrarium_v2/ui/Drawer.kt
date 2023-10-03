@@ -123,9 +123,21 @@ fun Drawer(navController: NavHostController, viewModel: AppViewModel = viewModel
                         when(backStack?.destination?.route){
                             Screen.Chat().route -> {
                                 IconButton(onClick = {
-                                    val chatId by viewModel.chatId
-                                    if(chatId != null)
-                                        navController.navigate(Screen.ChatInfo(chatId!!).route)
+                                    val chat by viewModel.chat
+                                    if(chat?.id != null)
+                                        navController.navigate(Screen.ChatInfo(chat?.id!!).route)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = stringResource(id = R.string.editChat)
+                                    )
+                                }
+                            }
+                            Screen.PrivateChat().route -> {
+                                IconButton(onClick = {
+                                    val chat by viewModel.chat
+                                    if(chat?.isPrivate?.uid != null)
+                                        navController.navigate(Screen.OtherAccount(chat?.isPrivate?.uid!!).route)
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.MoreVert,

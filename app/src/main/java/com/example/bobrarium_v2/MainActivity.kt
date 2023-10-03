@@ -12,11 +12,14 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            val navController = rememberNavController()
-            Bobrarium_v2Theme {
-                Drawer(navController)
+//            ProvideWindowInsets {
+                val navController = rememberNavController()
+                Bobrarium_v2Theme {
+                    Drawer(navController)
+                }
             }
-        }
+//        }
     }
 }

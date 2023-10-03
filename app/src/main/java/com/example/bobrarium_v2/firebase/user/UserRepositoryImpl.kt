@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.bobrarium_v2.Resource
 import com.example.bobrarium_v2.Simple
 import com.example.bobrarium_v2.firebase.chat.Chat
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val database: FirebaseDatabase,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage,
+    private val auth: FirebaseAuth
 ) : UserRepository{
     companion object {
         private const val TAG = "UserRepositoryImpl"
@@ -31,16 +33,15 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun addChat(uid: String?, chatID: String): Flow<Resource<String?>> {
+    override fun addChat(uid: String?, chatID: String): Flow<Resource<String>> {
         return flow {
             if (uid == null) emit(Resource.Error("not auth"))
             else {
                 emit(Resource.Loading())
-                val reference = database.getReference("users/$uid/chats")
-                if(!reference.get().await().children.map { it.value as String? }.contains(chatID))
-                    reference.push().setValue(chatID).await()
-
-                emit(Resource.Success(reference.key))
+                val reference = database.getReference("users/$uid/chats/$chatID")
+                if(!reference.get().await().exists())
+                    reference.setValue(1).await()
+                emit(Resource.Success(chatID))
             }
         }.catch {
             Log.w(TAG, it)
@@ -51,18 +52,17 @@ class UserRepositoryImpl @Inject constructor(
     override fun getChats(uid: String): Flow<Resource<List<Chat>>> {
         return flow {
             emit(Resource.Loading())
-            val chatsSnapshot = database.getReference("users/$uid/chats").get().await()
-            val chatsID = chatsSnapshot.children.map { it.value.toString() }.distinct()
-//            val result = mutableListOf<Chat>()
-            val result = chatsID.map { Chat(database.getReference("chats/$it").get().await()) }
-//            for (chatId in chatsID){
-//                if(result.map{ it.id }.contains(chatId)) continue
-//                val chat = database.getReference("chats/$chatId").get().await()
-//                result.add(Chat(chat))
-//            }
+            val reference = database.getReference("users/$uid/chats")
+            val chatsID = reference.get().await().children.mapNotNull { it.key }.distinct()
+            val result = chatsID.mapNotNull { id ->
+                val ref = database.getReference("chats/$id").get().await()
+                val chat = Chat.get(ref, uid) { getUser(it) }
+                if (chat == null) reference.child(id).removeValue().addOnSuccessListener { Log.d(TAG, id) }
+                chat
+            }
             emit(Resource.Success(result))
             result.forEach { chat ->
-                chat.setUri(storage.reference)
+                chat.setUri(storage)
                 emit(Resource.Success(result))
             }
         }.catch {
@@ -70,14 +70,22 @@ class UserRepositoryImpl @Inject constructor(
             emit(Resource.Error(it.message))
         }
     }
+    private suspend fun getUser(uid: String): User {
+        val user = User(database.getReference("users/$uid").get().await())
+        user.setUri(storage)
+        return user
+    }
 
     override fun getChats(chatIds: List<String>): Flow<Resource<List<Chat>>> {
         return flow {
             emit(Resource.Loading())
-            val result = chatIds.map { Chat(database.getReference("chats/$it").get().await()) }
+            val result = chatIds.mapNotNull { chatId ->
+                val ref = database.getReference("chats/$chatId").get().await()
+                Chat.get(ref, auth.uid!!) { getUser(it) }
+            }
             emit(Resource.Success(result))
             result.forEach { chat ->
-                chat.setUri(storage.reference)
+                chat.setUri(storage)
                 emit(Resource.Success(result))
             }
         }.catch {
