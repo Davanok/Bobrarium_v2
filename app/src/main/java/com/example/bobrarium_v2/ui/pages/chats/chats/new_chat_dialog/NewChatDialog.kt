@@ -1,11 +1,14 @@
 package com.example.bobrarium_v2.ui.pages.chats.chats.new_chat_dialog
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,7 +20,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,16 +33,20 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.bobrarium_v2.CustomState
 import com.example.bobrarium_v2.R
+import com.example.bobrarium_v2.Simple
 import com.example.bobrarium_v2.ui.Screen
 
 inline fun <reified T> SnapshotStateList<T>.setElements(elements: Collection<T>){
     this.clear()
     this.addAll(elements)
 }
+inline fun <reified T> MutableList<T>.setElements(elements: Collection<T>){
+    this.clear()
+    this.addAll(elements)
+}
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun NewChatDialog(
     navController: NavHostController,
@@ -53,17 +59,17 @@ fun NewChatDialog(
     ) {
         val text = remember { mutableStateOf("") }
         val isError = remember { mutableStateOf(false) }
-
-        val state by viewModel.chatsState.collectAsState(initial = CustomState())
-
         val context = LocalContext.current
+
+        val state by viewModel.state
+
 
         val onValueChanged: (String) -> Unit = {
             text.value = it
-            if (state.isSuccess != null){
-                if(it.isBlank()) viewModel.filteredChats.setElements(state.isSuccess!!)
+            if (state is Simple.Success){
+                if(it.isBlank()) viewModel.filteredChats.setElements(viewModel.chats)
                 else viewModel.filteredChats.setElements(
-                    state.isSuccess!!.filter { chat -> chat.name?.lowercase()?.contains(it.lowercase()) != false }
+                    viewModel.chats.filter { chat -> chat.name?.lowercase()?.contains(it.lowercase()) != false }
                 )
             }
         }
@@ -84,7 +90,7 @@ fun NewChatDialog(
                         onDismiss()
                         if(text.value.isBlank())
                             isError.value = true
-                        else if(state.isSuccess?.map { it.name }?.contains(text.value) != false){
+                        else if(viewModel.chats.map { it.name }.contains(text.value)){
                             isError.value = true
                             Toast.makeText(context, R.string.nameTaken, Toast.LENGTH_SHORT).show()
                         }
@@ -97,10 +103,10 @@ fun NewChatDialog(
             },
             isError = isError.value
         )
-        if (state.isLoading){
+        if (viewModel.isLoading.value){
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
-        else if (state.isError != null){
+        else if (state is Simple.Fail){
             Icon(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,33 +116,88 @@ fun NewChatDialog(
                 contentDescription = stringResource(id = R.string.errorChatsLoading)
             )
             Text(text = stringResource(id = R.string.errorChatsLoading))
-            Text(text = state.isError.toString())
         }
-        else if (state.isSuccess != null){
-            LazyColumn(
+        else if (state is Simple.Success){
+            val pagerState = rememberPagerState { 2 }
+            HorizontalPager(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+                    .fillMaxWidth(),
+                state = pagerState
             ) {
-                items(
-                    viewModel.filteredChats,
-                    key = { it.id }
-                ){ chat ->
-                    DialogChatItem(chat) {
-                        viewModel.addChatForUser(
-                            chat,
-                            { chatId ->
-                                onDismiss()
-                            }, { message ->
-                                Toast.makeText(context, "Error:\n$message", Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                        navController.navigate(Screen.Chat(chat.id).route)
-                    }
-                }
+                if (it == 0) Chats(
+                    navController,
+                    viewModel,
+                    onDismiss
+                )
+                else Users(
+                    navController,
+                    viewModel,
+                    onDismiss
+                )
             }
         }
 
+    }
+}
+@Composable
+private fun Chats(
+    navController: NavHostController,
+    viewModel: NewChatDialogViewModel,
+    onDismiss: () -> Unit
+){
+    val context = LocalContext.current
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        items(
+            viewModel.chats,
+            key = { it.id }
+        ){ chat ->
+            DialogChatItem(chat) {
+                viewModel.addChatForUser(
+                    chat,
+                    { _ ->
+                        onDismiss()
+                    }, { message ->
+                        Toast.makeText(context, "Error:\n$message", Toast.LENGTH_SHORT).show()
+                    }
+                )
+                navController.navigate(Screen.Chat(chat.id).route)
+            }
+        }
+    }
+}
+@Composable
+private fun Users(
+    navController: NavHostController,
+    viewModel: NewChatDialogViewModel,
+    onDismiss: () -> Unit
+){
+    val context = LocalContext.current
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        items(
+            viewModel.chats,
+            key = { it.id }
+        ){ chat ->
+            DialogChatItem(chat) {
+                viewModel.addChatForUser(
+                    chat,
+                    { _ ->
+                        onDismiss()
+                    }, { message ->
+                        Toast.makeText(context, "Error:\n$message", Toast.LENGTH_SHORT).show()
+                    }
+                )
+                navController.navigate(Screen.Chat(chat.id).route)
+            }
+        }
     }
 }

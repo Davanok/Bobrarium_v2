@@ -69,5 +69,6 @@ data class Chat(
             }
             return Chat(snapshot)
         }
+        fun getNotPrivate(snapshot: DataSnapshot) = if(snapshot.exists()) Chat(snapshot) else null
     }
 }

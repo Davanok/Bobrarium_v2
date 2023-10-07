@@ -62,7 +62,7 @@ class FirebaseChatRepositoryImpl @Inject constructor(
         return flow {
             emit(Resource.Loading())
             val snapshot = ref.get().await()
-            val chats = snapshot.children.mapNotNull { Chat.get(it, "") { _ -> User(it) } } // TODO: filter for not private
+            val chats = snapshot.children.mapNotNull { Chat.getNotPrivate(it) }
             emit(Resource.Success(chats))
             chats.forEach{
                 it.setUri(storage)
