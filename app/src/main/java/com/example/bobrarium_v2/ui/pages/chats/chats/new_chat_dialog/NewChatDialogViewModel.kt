@@ -1,6 +1,5 @@
 package com.example.bobrarium_v2.ui.pages.chats.chats.new_chat_dialog
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
@@ -25,13 +24,16 @@ class NewChatDialogViewModel @Inject constructor(
     private val repository: FirebaseChatRepository,
     private val userRepository: UserRepository
 ): ViewModel() {
-    val state = mutableStateOf<Simple>(Simple.Success)
-    val isLoading = mutableStateOf(state.value is Simple.Loading)
+    val chatsState = mutableStateOf<Simple?>(null)
+    val usersState = mutableStateOf<Simple?>(null)
+    val isLoading = mutableStateOf(chatsState.value is Simple.Loading)
 
     init {
-        snapshotFlow { state.value }.onEach {
-            Log.d("MyLog", "update isLoading")
-            isLoading.value = it is Simple.Loading
+        snapshotFlow { chatsState.value }.onEach {
+            isLoading.value = it is Simple.Loading || usersState.value is Simple.Loading
+        }.launchIn(viewModelScope)
+        snapshotFlow { usersState.value }.onEach {
+            isLoading.value = it is Simple.Loading || chatsState.value is Simple.Loading
         }.launchIn(viewModelScope)
     }
 
@@ -44,12 +46,26 @@ class NewChatDialogViewModel @Inject constructor(
     fun loadChatsList() = viewModelScope.launch{
         repository.getChatsList().collect { result ->
             when(result){
-                is Resource.Loading -> state.value = Simple.Loading
+                is Resource.Loading -> chatsState.value = Simple.Loading
                 is Resource.Success -> {
-                    state.value = Simple.Success
+                    chatsState.value = Simple.Success
                     chats.setElements(result.data?: emptyList())
+                    filteredChats.setElements(chats)
                 }
-                is Resource.Error -> state.value = Simple.Fail()
+                is Resource.Error -> chatsState.value = Simple.Fail()
+            }
+        }
+    }
+    fun loadUsersList() = viewModelScope.launch{
+        userRepository.getUsersList().collect { result ->
+            when(result){
+                is Resource.Loading -> chatsState.value = Simple.Loading
+                is Resource.Success -> {
+                    usersState.value = Simple.Success
+                    users.setElements(result.data?: emptyList())
+                    filteredUsers.setElements(users)
+                }
+                is Resource.Error -> chatsState.value = Simple.Fail()
             }
         }
     }

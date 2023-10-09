@@ -56,18 +56,24 @@ data class Chat(
         )
 
     companion object {
-        suspend fun get(snapshot: DataSnapshot, uid: String, onGetUser: suspend (String) -> User): Chat?{
-            if (!snapshot.exists()) return null
-            if(snapshot.child("isPrivate").exists()) {
-                val uid1 = snapshot.child("uid1").value.toString()
-                val uid2 = snapshot.child("uid2").value.toString()
-                val user = onGetUser(if (uid == uid1) uid2 else uid1)
-                return Chat(
-                    snapshot.key!!,
-                    user
-                )
-            }
-            return Chat(snapshot)
+//        suspend fun get(snapshot: DataSnapshot, uid: String, onGetUser: suspend (String) -> User): Chat?{
+//            if (!snapshot.exists()) return null
+//            if (snapshot.child("isPrivate").exists()) {
+//                val uid1 = snapshot.child("uid1").value.toString()
+//                val uid2 = snapshot.child("uid2").value.toString()
+//                val user = onGetUser(if (uid == uid1) uid2 else uid1)
+//                return Chat(
+//                    snapshot.key!!,
+//                    user
+//                )
+//            }
+//            return Chat(snapshot)
+//        }
+        fun getPrivate(
+            anotherUser: User,
+            chatId: String
+        ): Chat{
+            return Chat(chatId, anotherUser)
         }
         fun getNotPrivate(snapshot: DataSnapshot) = if(snapshot.exists()) Chat(snapshot) else null
     }

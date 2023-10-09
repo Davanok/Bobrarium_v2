@@ -20,4 +20,5 @@ interface UserRepository {
     fun updateAbout(uid: String, about: String)
 
     fun getChats(chatIds: List<String>): Flow<Resource<List<Chat>>>
+    fun getUsersList(): Flow<Resource<List<User>>>
 }

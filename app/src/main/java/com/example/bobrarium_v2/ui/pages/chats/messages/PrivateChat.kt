@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import com.example.bobrarium_v2.AppViewModel
 import com.example.bobrarium_v2.R
 import com.example.bobrarium_v2.Simple
+import com.example.bobrarium_v2.stringSum
 import com.example.bobrarium_v2.ui.pages.account.AccountViewModel
 import com.example.bobrarium_v2.ui.pages.chats.chats.chatSettings.FailCard
 import com.google.firebase.auth.ktx.auth
@@ -21,7 +22,7 @@ import com.google.firebase.ktx.Firebase
 @Composable
 fun PrivateChat(
     navController: NavHostController,
-    chatId: String,
+    userId: String,
     appViewModel: AppViewModel,
     viewModel: MessagesViewModel = hiltViewModel(),
     accViewModel: AccountViewModel = hiltViewModel()
@@ -29,10 +30,8 @@ fun PrivateChat(
     val uid = Firebase.auth.uid
     val user by appViewModel.author
 
-    viewModel.isPrivateChat = user?.uid
-
-    if(user == null || user?.uid != chatId){
-        accViewModel.loadUser(chatId){
+    if(user == null || user?.uid != userId){
+        accViewModel.loadUser(userId){
             appViewModel.author.value = it
         }
         Box(
@@ -45,6 +44,7 @@ fun PrivateChat(
     else{
         if (user!! !in viewModel.authors) viewModel.authors.add(user!!)
         if (appViewModel.appBarTitle.value != user!!.username) appViewModel.appBarTitle.value = user!!.username
+        viewModel.isPrivate = user!!.uid
     }
 
     Box(
@@ -52,15 +52,18 @@ fun PrivateChat(
         contentAlignment = Alignment.Center
     ){
         if(uid == null) FailCard(stringResource(id = R.string.not_signed))
-        else
-            when(viewModel.messagesState.value){
+        else {
+            val chatId = stringSum(userId, uid)
+            when (viewModel.messagesState.value) {
                 null -> viewModel.setMessagesObserver(chatId)
                 is Simple.Loading -> CircularProgressIndicator()
                 is Simple.Fail -> FailCard(viewModel.messagesState.value?.err?.message)
                 is Simple.Success -> {
-                    appViewModel.setChatName(chatId, uid)
+                    if (user != null)
+                        appViewModel.setPrivateChatName(chatId, user!!)
                     ChatContent(navController, uid, chatId, viewModel, appViewModel)
                 }
             }
+        }
     }
 }

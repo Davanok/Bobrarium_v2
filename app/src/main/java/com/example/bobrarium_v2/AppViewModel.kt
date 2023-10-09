@@ -20,13 +20,20 @@ class AppViewModel(
     val currentUser = mutableStateOf<User?>(null)
 
 
-    fun setChatName(chatId: String, uid: String){
+    fun setPrivateChatName(chatId: String, user: User){
         if (chat.value == null || chat.value?.id != chatId) {
             viewModelScope.launch {
-                chat.value = Chat.get(database.getReference("chats/$chatId").get().await(), uid) {
-                    User(database.getReference("users/$it").get().await())
-                }
-                appBarTitle.value = chat.value!!.name
+                chat.value = Chat.getPrivate(user, chatId)
+                appBarTitle.value = chat.value?.name
+            }
+        }
+        else appBarTitle.value = chat.value!!.name
+    }
+    fun setNotPrivateChatName(chatId: String){
+        if (chat.value == null || chat.value?.id != chatId) {
+            viewModelScope.launch {
+                chat.value = Chat.getNotPrivate(database.getReference("chats/$chatId").get().await())
+                appBarTitle.value = chat.value?.name
             }
         }
         else appBarTitle.value = chat.value!!.name

@@ -86,7 +86,7 @@ fun Chat(
                 is Simple.Loading -> CircularProgressIndicator()
                 is Simple.Fail -> FailCard(firebaseViewModel.messagesState.value?.err?.message)
                 is Simple.Success -> {
-                    appViewModel.setChatName(chatId, uid)
+                    appViewModel.setNotPrivateChatName(chatId)
                     ChatContent(navController, uid, chatId, firebaseViewModel, appViewModel)
                 }
             }

@@ -97,7 +97,9 @@ private fun Content(
             }
         }
     ){ padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()) {
             if (chatsState.isLoading)
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             else
@@ -111,8 +113,10 @@ private fun Content(
                             appViewModel.chat.value = chat
                             if (chat.isPrivate == null)
                                 navController.navigate(Screen.Chat(chat.id).route)
-                            else
-                                navController.navigate(Screen.PrivateChat(chat.id).route)
+                            else {
+                                appViewModel.author.value = chat.isPrivate
+                                navController.navigate(Screen.PrivateChat(chat.isPrivate.uid).route)
+                            }
                         }
                     }
                 }

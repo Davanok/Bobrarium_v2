@@ -35,34 +35,35 @@ class FirebaseChatRepositoryImpl @Inject constructor(
 
             val chatsNames = reference.get().await().children.map { it.child("name").value.toString() }
             if(chatsNames.contains(name)) emit(Resource.Error(R.string.nameTaken.toString()))
-
-            val newChatRef = reference.push()
-            val uid = listOfNotNull(auth.uid)
-            val chat = Chat(newChatRef.key!!, name, about, imageName, uid, uid)
-            newChatRef.setValue(chat.map)
-            if(uri != null){
-                storage.getReference("chats/${newChatRef.key}/${imageName}").putFile(uri)
+            else {
+                val newChatRef = reference.push()
+                val uid = listOfNotNull(auth.uid)
+                val chat = Chat(newChatRef.key!!, name, about, imageName, uid, uid)
+                newChatRef.setValue(chat.map)
+                if (uri != null) {
+                    storage.getReference("chats/${newChatRef.key}/${imageName}").putFile(uri)
+                }
+                emit(Resource.Success(chat))
             }
-            emit(Resource.Success(chat))
         }.catch {
             emit(Resource.Error(it.message))
         }
     }
 
-    override fun createPrivateChat(user1: String, user2: String, chatId: String) {
-        val chat = PrivateChat(chatId, user1, user2)
-        val reference = database.getReference("chats/$chatId")
-        reference.setValue(chat.map)
-        database.getReference("users/$user1/chats/$chatId").setValue(1)
-        database.getReference("users/$user2/chats/$chatId").setValue(1)
-    }
+//    override fun createPrivateChat(user1: String, user2: String, chatId: String) {
+//        val chat = PrivateChat(chatId, user1, user2)
+//        val reference = database.getReference("chats/$chatId")
+//        reference.setValue(chat.map)
+//        database.getReference("users/$user1/chats/$chatId").setValue(1)
+//        database.getReference("users/$user2/chats/$chatId").setValue(1)
+//    }
 
     override fun getChatsList(): Flow<Resource<List<Chat>>> {
         val ref =  database.getReference("chats")
         return flow {
             emit(Resource.Loading())
             val snapshot = ref.get().await()
-            val chats = snapshot.children.mapNotNull { Chat.getNotPrivate(it) }
+            val chats = snapshot.children.mapNotNull { Chat.getNotPrivate(it) }.sortedBy { it.name }
             emit(Resource.Success(chats))
             chats.forEach{
                 it.setUri(storage)
@@ -79,26 +80,34 @@ class FirebaseChatRepositoryImpl @Inject constructor(
             emit(Resource.Loading())
             val snapshot = ref.get().await()
 
-            val chat = Chat.get(snapshot, auth.uid!!){
-                getUser(it)
-            }!!
-            emit(Resource.Success(chat))
-            chat.setUri(storage)
-            emit(Resource.Success(chat))
+            val chat = Chat.getNotPrivate(snapshot)
+            if (chat == null) emit(Resource.Error(null))
+            else {
+                emit(Resource.Success(chat))
+                chat.setUri(storage)
+                emit(Resource.Success(chat))
+            }
         }.catch {
             emit(Resource.Error(it.message))
         }
     }
 
-    override fun sendImage(uid: String, chatId: String, text: String, image: VisualContent?): Flow<Resource<Message>> {
+    override fun sendMessage(uid: String, chatId: String, text: String, image: VisualContent?, isPrivate: String?): Flow<Resource<Message>> {
         return flow {
-            val reference = database.getReference("messages/$chatId").push()
-            val message = Message(reference.key!!, chatId, uid, text, image?.filename, null, Simple.Loading)
+            val reference = database.getReference("messages/$chatId")
+            if (isPrivate != null) reference.get().addOnSuccessListener {
+                if (!it.exists()) {
+                    database.getReference("users/$uid/chats/$chatId").setValue(isPrivate)
+                    database.getReference("users/$isPrivate/chats/$chatId").setValue(uid)
+                }
+            }
+            val msgRef = reference.push()
+            val message = Message(msgRef.key!!, chatId, uid, text, image?.filename, null, Simple.Loading)
             emit(Resource.Loading(message))
             if(image!= null) {
-                storage.getReference("chats/$chatId/messages/${reference.key!!}_${image.filename}").putFile(image.uri).await()
+                storage.getReference("chats/$chatId/messages/${msgRef.key!!}_${image.filename}").putFile(image.uri).await()
             }
-            reference.setValue(message.map)
+            msgRef.setValue(message.map)
             emit(Resource.Success(message))
         }.catch {
             emit(Resource.Error(it.message))
@@ -158,10 +167,4 @@ class FirebaseChatRepositoryImpl @Inject constructor(
             emit(Simple.Fail(it))
         }
     }
-
-    override suspend fun getMessagesCount(chatId: String): Long {
-        return database.getReference("messages/$chatId").get().await().childrenCount
-    }
-
-
 }

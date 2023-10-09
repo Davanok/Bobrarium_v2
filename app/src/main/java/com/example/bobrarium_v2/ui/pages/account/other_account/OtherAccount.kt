@@ -37,7 +37,6 @@ import com.example.bobrarium_v2.CustomState
 import com.example.bobrarium_v2.OnScrolledDown
 import com.example.bobrarium_v2.R
 import com.example.bobrarium_v2.firebase.user.User
-import com.example.bobrarium_v2.stringSum
 import com.example.bobrarium_v2.ui.Screen
 import com.example.bobrarium_v2.ui.pages.account.AccountViewModel
 import com.example.bobrarium_v2.ui.pages.chats.chats.chatSettings.FailCard
@@ -114,7 +113,7 @@ private fun Content(
                     onClick = {
                         val uid = Firebase.auth.uid
                         if (uid == null) Toast.makeText(context, R.string.not_signed, Toast.LENGTH_SHORT).show()
-                        else navController.navigate(Screen.PrivateChat(stringSum(uid, user.uid)).route)
+                        else navController.navigate(Screen.PrivateChat(user.uid).route)
                     }
                 ) {
                     Icon(imageVector = ImageVector.vectorResource(id = R.drawable.baseline_chat_24), contentDescription = stringResource(id = R.string.goToPrivateChat))

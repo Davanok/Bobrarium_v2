@@ -29,21 +29,18 @@ private const val TAG = "MessagesViewModel"
 class MessagesViewModel @Inject constructor(
     private val repository: FirebaseChatRepository
 ): ViewModel() {
-    var isPrivateChat: String? = null
-
     val messagesState = mutableStateOf<Simple?>(null)
+    var isPrivate: String? = null
 
     val newMessagesCount = mutableIntStateOf(0)
 
-    var authors = mutableStateListOf<User>()
+    val authors = mutableStateListOf<User>()
     val messages = mutableStateListOf<Message>()
 
     fun setMessagesObserver(chatId: String){
         val storage = Firebase.storage
         viewModelScope.launch { messagesState.value = Simple.Success }
         val reference = Firebase.database.getReference("messages/$chatId")
-
-//        reference.get().await().childrenCount
 
         reference.addChildEventListener(
             object : ChildEventListener{
@@ -89,16 +86,11 @@ class MessagesViewModel @Inject constructor(
     }
 
     fun sendMessage(uid: String, chatId: String, text: String, image: VisualContent?, onSuccess: (Int) -> Unit) = viewModelScope.launch {
-        val count = repository.getMessagesCount(chatId)
-        if (isPrivateChat != null && count == 0L) {
-            repository.createPrivateChat(uid, isPrivateChat!!, chatId)
-        }
-        repository.sendImage(uid, chatId, text, image).collect { result ->
+        repository.sendMessage(uid, chatId, text, image, isPrivate).collect { result ->
             when(result){
                 is Resource.Error -> {Log.w(TAG, result.message.toString())}
                 is Resource.Loading -> {}
                 is Resource.Success -> {
-                    delay(10)
                     onSuccess(messages.lastIndex)
                 }
             }

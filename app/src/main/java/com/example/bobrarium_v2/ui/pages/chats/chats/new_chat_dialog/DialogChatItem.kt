@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.bobrarium_v2.R
 import com.example.bobrarium_v2.firebase.chat.Chat
+import com.example.bobrarium_v2.firebase.user.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +39,26 @@ fun DialogChatItem(chat: Chat, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             ItemImage(uri = chat.uri)
-            Text(text = chat.name.toString(), Modifier.padding(start = 10.dp))
+            Text(text = chat.name?: stringResource(id = R.string.bobeur), Modifier.padding(start = 10.dp))
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogChatItem(user: User, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ItemImage(uri = user.fiUri)
+            Text(text = user.username?: stringResource(id = R.string.bobeur), Modifier.padding(start = 10.dp))
         }
     }
 }

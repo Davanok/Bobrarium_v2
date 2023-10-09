@@ -96,4 +96,7 @@
     <string name="goToPrivateChat">Go to private chat</string>
 
     <string name="image">Image</string>
+
+    <string name="chats">Chats</string>
+    <string name="users">Users</string>
 </resources>

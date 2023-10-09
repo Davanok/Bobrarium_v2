@@ -40,7 +40,7 @@ class UserRepositoryImpl @Inject constructor(
                 emit(Resource.Loading())
                 val reference = database.getReference("users/$uid/chats/$chatID")
                 if(!reference.get().await().exists())
-                    reference.setValue(1).await()
+                    reference.setValue(true).await()
                 emit(Resource.Success(chatID))
             }
         }.catch {
@@ -53,18 +53,34 @@ class UserRepositoryImpl @Inject constructor(
         return flow {
             emit(Resource.Loading())
             val reference = database.getReference("users/$uid/chats")
-            val chatsID = reference.get().await().children.mapNotNull { it.key }.distinct()
+            val chatsID = reference.get().await().children.mapNotNull {
+                if (it.key != null && it.value != null)
+                    Pair(it.key!!, it.value!!)
+                else null
+            }.distinct()
             val result = chatsID.mapNotNull { id ->
-                val ref = database.getReference("chats/$id").get().await()
-                val chat = Chat.get(ref, uid) { getUser(it) }
-                if (chat == null) reference.child(id).removeValue().addOnSuccessListener { Log.d(TAG, id) }
+                val chat =
+                    if (id.second is String) {
+                        Log.d(TAG, "private chat")
+                        val user = User(database.getReference("users/${id.second}").get().await())
+                        Chat.getPrivate(user, id.first)
+                    }
+                    else {
+                        Log.d(TAG, "normal chat")
+                        Chat.getNotPrivate(
+                            database.getReference("chats/${id.first}").get().await()
+                        )
+                    }
+//                val ref = database.getReference("chats/$id").get().await()
+//                val chat = Chat.get(ref, uid) { getUser(it) }
+//                if (chat == null) reference.child(id).removeValue().addOnSuccessListener { Log.d(TAG, id) }
                 chat
             }
             emit(Resource.Success(result))
             result.forEach { chat ->
                 chat.setUri(storage)
-                emit(Resource.Success(result))
             }
+            emit(Resource.Success(result))
         }.catch {
             Log.w(TAG, it)
             emit(Resource.Error(it.message))
@@ -81,7 +97,7 @@ class UserRepositoryImpl @Inject constructor(
             emit(Resource.Loading())
             val result = chatIds.mapNotNull { chatId ->
                 val ref = database.getReference("chats/$chatId").get().await()
-                Chat.get(ref, auth.uid!!) { getUser(it) }
+                Chat.getNotPrivate(ref)
             }
             emit(Resource.Success(result))
             result.forEach { chat ->
@@ -148,6 +164,22 @@ class UserRepositoryImpl @Inject constructor(
     override fun updateAbout(uid: String, about: String) {
         database.getReference("users/$uid/about").setValue(about).addOnFailureListener {
             Log.w(TAG, it)
+        }
+    }
+
+    override fun getUsersList(): Flow<Resource<List<User>>> {
+        val ref =  database.getReference("users")
+        return flow {
+            emit(Resource.Loading())
+            val snapshot = ref.get().await()
+            val users = snapshot.children.mapNotNull { User(it) }.sortedBy { it.username }
+            emit(Resource.Success(users))
+            users.forEach{
+                it.setUri(storage)
+            }
+            emit(Resource.Success(users))
+        }.catch {
+            emit(Resource.Error(it.message))
         }
     }
 
